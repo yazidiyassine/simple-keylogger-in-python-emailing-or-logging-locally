@@ -1,0 +1,2 @@
+EMAIL_ADDRESS = "donet32722@jwsuns.com"
+EMAIL_PASSWORD = ""

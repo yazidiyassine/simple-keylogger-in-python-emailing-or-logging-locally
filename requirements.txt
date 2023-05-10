@@ -1,0 +1,2 @@
+# installing the model "keyboard" using pip
+pip install keyboard
